@@ -1,0 +1,22 @@
+# https://artifacthub.io/packages/helm/vmware-tanzu/velero
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jfrog
+  namespace: default
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: jfrog
+    helm:
+      values: |
+
+    repoURL: https://charts.jfrog.io
+    targetRevision: 107.90.10
+  syncPolicy:
+    automated: {}
