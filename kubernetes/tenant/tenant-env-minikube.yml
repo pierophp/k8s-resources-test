@@ -1,0 +1,106 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-env
+data:
+  .env.tenant: |
+    TENANT_ACTIVE_BATCHILE=false
+    TENANT_ACTIVE_BATBRASIL=true
+    TENANT_ACTIVE_BATCOLOMBIA=true
+    TENANT_ACTIVE_BATNORUEGA=true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-sample-app-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-sample-app-01
+  template:
+    metadata:
+      labels:
+        app: tenant-sample-app-01
+    spec:
+      containers:
+        - name: tenant-sample-app-01
+          image: tenant-sample-app
+          imagePullPolicy: Never
+          volumeMounts:
+            - name: tenant-volume
+              # mountPath: /env
+              mountPath: /usr/src/app/.env.tenant
+              subPath: .env.tenant
+          # envFrom:
+          #   - configMapRef:
+          #       name: tenant-env
+          ports:
+            - containerPort: 3000
+      volumes:
+        - name: tenant-volume
+          configMap:
+            name: tenant-env
+            # items:
+            #   - key: .env.tenant
+            #     path: .env.tenant
+---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: tenant-sample-app-02
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: tenant-sample-app-02
+#   template:
+#     metadata:
+#       labels:
+#         app: tenant-sample-app-02
+#     spec:
+#       containers:
+#         - name: tenant-sample-app-02
+#           image: tenant-sample-app
+#           imagePullPolicy: Never
+#           volumeMounts:
+#             - name: tenant-volume
+#               mountPath: /app/config # Mount the ConfigMap as a file
+#               subPath: .env
+#           # envFrom:
+#           #   - configMapRef:
+#           #       name: tenant-env
+#           ports:
+#             - containerPort: 3000
+#       volumes:
+#         - name: tenant-volume
+#           configMap:
+#             name: tenant-env
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: tenant-sample-app-01
+# spec:
+#   selector:
+#     app: tenant-sample-app-01
+#   ports:
+#     - protocol: TCP
+#       port: 3001 # External port exposed on the cluster
+#       targetPort: 3000 # Port of the container inside the pod
+#   type: NodePort
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: tenant-sample-app-02
+# spec:
+#   selector:
+#     app: tenant-sample-app-02
+#   ports:
+#     - protocol: TCP
+#       port: 3002 # External port exposed on the cluster
+#       targetPort: 3000 # Port of the container inside the pod
+#   type: NodePort

@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-env
+data:
+  .env.tenant: |
+    TENANT_ACTIVE_BATCHILE=true
+    TENANT_ACTIVE_BATBRASIL=true
+    TENANT_ACTIVE_BATCOLOMBIA=true
+    TENANT_ACTIVE_BATNORUEGA=true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-sample-app-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-sample-app-01
+  template:
+    metadata:
+      labels:
+        app: tenant-sample-app-01
+    spec:
+      containers:
+        - name: tenant-sample-app-01
+          image: quay.io/pierophp/tenant-sample-app-node:latest
+          imagePullPolicy: Always
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  [
+                    "sh",
+                    "-c",
+                    "ln -s /env/.env.tenant /usr/src/app/.env.tenant",
+                  ]
+          volumeMounts:
+            - name: tenant-volume
+              mountPath: /env
+              # mountPath: /usr/src/app/.env.tenant
+              # subPath: .env.tenant
+
+          ports:
+            - containerPort: 3000
+      volumes:
+        - name: tenant-volume
+          configMap:
+            name: tenant-env
